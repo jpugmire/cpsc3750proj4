@@ -46,12 +46,14 @@ const app = express();
 //attach the bodyparser middleware to the app
 app.use(bodyParser.urlencoded({ extended: true }));
 
-//configure and attack the session manager middleware to the app
+//configure and attach the session manager middleware to the app
 const seshConfig = {
 	secret: 'some random stuff here',
 	cookie: {}
 }
-app.use(session(seshConfig))
+app.use(session(seshConfig));
+
+app.use(express.static('../documentRoot'));
 
 //get a userobj from the db file 
 const getUser = (userid)=>{
