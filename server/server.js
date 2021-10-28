@@ -131,11 +131,11 @@ const computeHash = (password, salt)=>{
 //requires authentication
 app.delete('/db',(req,res)=>{
 	//get userid and password from request body
+	const {userid, password} = req.body;
+
 	//validate userid and password exist and arent empty strings
 	//	otherwise return 401 unauthorized, no need to send error messages here 
 	//    its not used by real users or browsers
-	//if username / salt / pass match something in userobj call clearusers and return a 200
-	const {userid, password} = req.body;
 	if(!userid||userid == ""){
 		res.sendStatus(401);
 		return;
@@ -144,18 +144,20 @@ app.delete('/db',(req,res)=>{
 		res.sendStatus(401);
 		return;
 	}
-	const userObj = getUser(userid);
 
+	//get user information using id, validate it exists.
+	const userObj = getUser(userid);
 	if(!userObj){
 		res.sendStatus(401);
 		return;
 	}
+
+	//if username / salt / pass match something in userobj call clearusers and return a 200
 	const passwordHash = computeHash(password, userObj.salt);
 	if(userObj.passwordHash != passwordHash){
 		res.sendStatus(401);
 		return;
 	}
-
 	clearUsers();
 	res.sendStatus(200);
 })
@@ -165,15 +167,36 @@ app.delete('/db',(req,res)=>{
 //should redirect to /dynamic/user/info on success
 app.post('/user/auth', (req, res) => {
 	//get userid and password from request body
+	const {userid, password} = req.body;
+
 	//validate that username and password exist and aren't empty strings
 	//  return appropriate error message to login
+	if(!userid||userid == ""){
+		res.sendStatus(401);
+		return;
+	}
+	if(!password||password == ""){
+		res.sendStatus(401);
+		return;
+	}
+
 	//validate getUser returns a user for given userid
 	//  return appropriate error message to login
+	const userObj = getUser(userid);
+	if(!userObj){
+		res.sendStatus(401);
+		return;
+	}
+
 	//validate hashed given password using salt from getUser object matches passwordHash on getUser obj
 	//  return appropriate error message to login
+	const passwordHash = computeHash(password, userObj.salt);
+	if(userObj.passwordHash != passwordHash){
+		res.sendStatus(401);
+		return;
+	}
 	//if all thats good save the userid into the request session and send user to /dynamic/user/info
 
-	const {userid, password} = req.body;
 	if(!userid || userid == ""){
 		res.redirect(`${proxy_path}/login/#${encodeURIComponent(errorMessages.NO_USER)}`);
 		return;
